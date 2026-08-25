@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+
 """
 Point d'entree FastMCP + Uvicorn - serveur MCP data.gov.tn
 """
@@ -10,13 +10,9 @@ from fastmcp import FastMCP
 from config import settings
 from logging_config import setup_logging
 
-# Initialise le logging structure JSON avant tout le reste
 setup_logging()
 
-# Heure de demarrage du serveur, utilisee par /health
 START_TIME = datetime.now(timezone.utc)
-
-# Instance principale du serveur MCP
 mcp = FastMCP("data.gov.tn-mcp")
 
 

@@ -1,0 +1,38 @@
+Metadata-Version: 2.4
+Name: data.gov.tn-mcp
+Version: 1.0.0
+Summary: Serveur MCP pour le portail Open Data tunisien data.gov.tn
+License: MIT
+Requires-Python: >=3.12
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: mcp>=1.0.0
+Requires-Dist: fastmcp>=0.4.0
+Requires-Dist: uvicorn>=0.30.0
+Requires-Dist: httpx>=0.27.0
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: pydantic-settings>=2.0.0
+Requires-Dist: pandas>=2.0.0
+Requires-Dist: openpyxl>=3.1.0
+Requires-Dist: sentry-sdk>=2.0.0
+Requires-Dist: python-dotenv>=1.0.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0.0; extra == "dev"
+Requires-Dist: pytest-asyncio>=0.23.0; extra == "dev"
+Requires-Dist: pytest-cov>=5.0.0; extra == "dev"
+Requires-Dist: ruff>=0.4.0; extra == "dev"
+Requires-Dist: ty>=0.1.0; extra == "dev"
+Requires-Dist: pre-commit>=3.0.0; extra == "dev"
+Dynamic: license-file
+
+# data-gov-tn-mcp
+
+MCP server for Tunisia's Open Data portal (data.gov.tn).
+Read-only, Phase 1. See `docs/architecture.md` for details.
+
+## Setup
+\`\`\`bash
+pip install -e ".[dev]"
+cp .env.example .env
+python main.py
+\`\`\`
