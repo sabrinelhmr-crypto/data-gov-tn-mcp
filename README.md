@@ -1,6 +1,11 @@
-<<<<<<< HEAD
-# Documentation utilisateur
-=======
 # data-gov-tn-mcp
-Serveur MCP pour data.gov.tn
->>>>>>> 4ccce1736a9dc45f51919d13303fa854173016f7
+
+MCP server for Tunisia's Open Data portal (data.gov.tn).
+Read-only, Phase 1. See `docs/architecture.md` for details.
+
+## Setup
+\`\`\`bash
+pip install -e ".[dev]"
+cp .env.example .env
+python main.py
+\`\`\`

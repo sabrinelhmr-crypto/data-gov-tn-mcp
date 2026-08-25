@@ -1,1 +1,22 @@
 # Orchestration Docker
+version: '3.8'
+services:
+  mcp-server:
+    build:
+    ports:
+      - "${MCP_PORT:-8000}:8000"
+    environment:
+      - MCP_HOST=0.0.0.0
+      - MCP_PORT=8000
+      - MCP_ENV=${MCP_ENV:-local}
+      - DATAGOV_API_ENV=${DATAGOV_API_ENV:-prod}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SENTRY_SAMPLE_RATE=${SENTRY_SAMPLE_RATE:-1.0}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
