@@ -44,6 +44,13 @@ packages = ["helpers", "models", "tools"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+addopts = "--cov=. --cov-report=term-missing --cov-fail-under=90"
+
+[tool.coverage.run]
+omit = ["tests/*", "*/egg-info/*"]
+
+[tool.coverage.report]
+show_missing = true
 
 [tool.ruff]
 line-length = 100
