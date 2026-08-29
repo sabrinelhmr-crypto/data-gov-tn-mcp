@@ -144,6 +144,20 @@ async def test_info_dataset_introuvable(datagov):
     assert "abc-introuvable" in out
 
 
+async def test_info_metadonnees_cdc(datagov):
+    ds = _dataset()
+    ds["extras"] = [{"key": "frequency", "value": "mensuelle"}]
+    ds.pop("url")
+
+    async def handler(params):
+        return _payload(ds)
+
+    datagov.handler = handler
+    out = await get_dataset_info("abc-123")
+    assert "Frequence de mise a jour : mensuelle" in out
+    assert "Qualite des metadonnees : 10/10 champs remplis (100%)" in out
+
+
 async def test_info_requete_vide(datagov):
     out = await get_dataset_info("   ")
     assert "Veuillez fournir un identifiant" in out

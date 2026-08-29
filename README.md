@@ -46,7 +46,7 @@ Dans un autre terminal :
 curl http://localhost:8000/health
 ```
 
-Réponse attendue : `{"status": "healthy", "tools_count": 2, ...}`
+Réponse attendue : `{"status": "healthy", "tools_count": 3, ...}`
 
 Le serveur MCP est accessible sur `http://localhost:8000/mcp`.
 
@@ -61,18 +61,33 @@ La commande exécute tous les tests et affiche la couverture de code
 
 ## Les outils disponibles
 
+Le serveur expose **9 outils read-only** répartis en **3 familles fonctionnelles**
+(conformément au cahier des charges) :
+
+### Famille A — Recherche et Découverte
+
 | # | Outil | Description | État |
 |---|-------|-------------|------|
 | A1 | `search_datasets` | Recherche de jeux de données par mots-clés | ✅ |
-| A2 | `get_dataset_info` | Métadonnées détaillées d'un jeu de données | ✅ |
-| A3 | `list_dataset_resources` | Liste des ressources d'un jeu de données | 🔜 |
-| A4 | `download_and_parse_resource` | Télécharge et parse une ressource (CSV, Excel...) | 🔜 |
-| A5 | `get_dataservice_info` | Infos d'un service de données | 🔜 |
-| A6 | `get_dataservice_openapi_spec` | Spécification OpenAPI d'un service | 🔜 |
-| A7 | `get_resource_info` | Infos d'une ressource | 🔜 |
-| A8 | `query_resource_data` | Interroge les données d'une ressource | 🔜 |
-| B1 | `search_dataservices` | Recherche de services de données | 🔜 |
-| B2 | `get_metrics` | Statistiques du portail | 🔜 |
+| A2 | `search_dataservices` | Recherche de dataservices (APIs externes) | ✅ |
+
+### Famille B — Inspection et Métadonnées
+
+| # | Outil | Description | État |
+|---|-------|-------------|------|
+| B1 | `get_dataset_info` | Métadonnées détaillées d'un jeu de données | ✅ |
+| B2 | `list_dataset_resources` | Liste des ressources (fichiers) d'un dataset | 🔜 |
+| B3 | `get_resource_info` | Métadonnées détaillées d'une ressource | 🔜 |
+| B4 | `get_dataservice_info` | Métadonnées d'un dataservice | 🔜 |
+| B5 | `get_dataservice_openapi_spec` | Spécification OpenAPI d'un dataservice | 🔜 |
+
+### Famille C — Analyse de Données
+
+| # | Outil | Description | État |
+|---|-------|-------------|------|
+| C1 | `query_resource_data` | Interroge une ressource tabulaire (Tabular API) | 🔜 |
+| C2 | `download_and_parse_resource` | Télécharge et analyse une ressource (CSV, Excel, JSON) | 🔜 |
+| C3 | `get_metrics` | Indicateurs d'usage du portail (prod uniquement) | 🔜 |
 
 ## Structure du projet
 
@@ -80,6 +95,16 @@ La commande exécute tous les tests et affiche la couverture de code
 ├── main.py                  # Point d'entrée (serveur + health check)
 ├── config.py                # Configuration (via .env)
 ├── tools/                   # Les outils MCP (un fichier par outil)
+│   ├── search_datasets.py            # A1 — Recherche de datasets
+│   ├── search_dataservices.py        # A2 — Recherche de dataservices
+│   ├── get_dataset_info.py           # B1 — Métadonnées d'un dataset
+│   ├── list_dataset_resources.py     # B2 — Liste des ressources
+│   ├── get_resource_info.py          # B3 — Métadonnées d'une ressource
+│   ├── get_dataservice_info.py       # B4 — Métadonnées d'un dataservice
+│   ├── get_dataservice_openapi_spec.py  # B5 — Spéc OpenAPI
+│   ├── query_resource_data.py        # C1 — Requête tabulaire
+│   ├── download_and_parse_resource.py   # C2 — Téléchargement et parsing
+│   └── get_metrics.py                # C3 — Indicateurs d'usage
 ├── helpers/                 # Code partagé (client API, nettoyage requêtes...)
 ├── models/                  # Modèles de données (Phase 2)
 ├── tests/                   # Tests unitaires

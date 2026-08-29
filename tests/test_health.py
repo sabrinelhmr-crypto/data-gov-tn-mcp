@@ -31,7 +31,7 @@ async def test_health_liveness(monkeypatch, asgi_client):
     assert body["status"] == "healthy"
     assert body["service"] == "data.gov.tn-mcp"
     assert body["version"]
-    assert body["tools_count"] == 2
+    assert body["tools_count"] == 3
     assert body["uptime_since"]
     assert body["uptime_seconds"] >= 0
 
