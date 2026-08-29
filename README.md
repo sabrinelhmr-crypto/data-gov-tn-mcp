@@ -97,6 +97,7 @@ Le serveur expose **9 outils read-only** répartis en **3 familles fonctionnelle
 ├── tools/                   # Les outils MCP (un fichier par outil)
 │   ├── search_datasets.py            # A1 — Recherche de datasets
 │   ├── search_dataservices.py        # A2 — Recherche de dataservices
+│   ├── get_dataset_info.py           # B1 — Métadonnées d'un dataset
 │   ├── list_dataset_resources.py     # B2 — Liste des ressources
 │   ├── get_resource_info.py          # B3 — Métadonnées d'une ressource
 │   ├── get_dataservice_info.py       # B4 — Métadonnées d'un dataservice
