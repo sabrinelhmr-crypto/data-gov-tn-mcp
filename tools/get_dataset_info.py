@@ -1,5 +1,5 @@
 """
-Outil MCP A2 : get_dataset_info (section 4.2 du CDC).
+Outil MCP B1 : get_dataset_info (Famille B - Inspection et Metadonnees).
 Affiche les metadonnees detaillees d'un dataset via package_show.
 """
 
@@ -7,12 +7,49 @@ from helpers.api_client import DatagovAPIError, datagov_client
 
 _MAX_DESC_LEN = 300
 
+# Champs cles retenus pour le calcul de la qualite des metadonnees (CDC B1).
+_QUALITY_FIELDS = 10
+
+# Cles CKAN (extras) pour la frequence de mise a jour.
+_FREQUENCY_KEYS = {"frequency", "frequence", "update_frequency", "frequence_de_mise_a_jour"}
+
 
 def _truncate(text: str, limit: int) -> str:
     text = text.strip()
     if len(text) <= limit:
         return text
     return text[: limit - 3] + "..."
+
+
+def _metadata_quality(d: dict) -> tuple[int, str]:
+    """Calcule un score de qualite : champs presents parmi les champs cles."""
+    checks = [
+        bool(d.get("title")),
+        bool(d.get("notes")),
+        bool((d.get("organization") or {}).get("title")),
+        bool(d.get("license_title")),
+        bool(d.get("tags")),
+        bool(d.get("groups")),
+        bool(d.get("author") or d.get("maintainer")),
+        bool(d.get("metadata_created")),
+        bool(d.get("metadata_modified")),
+        bool(d.get("resources")),
+    ]
+    score = sum(checks)
+    pct = round(score * 100 / _QUALITY_FIELDS)
+    return score, f"{score}/{_QUALITY_FIELDS} champs remplis ({pct}%)"
+
+
+def _update_frequency(d: dict) -> str | None:
+    """Recupere la frequence de mise a jour depuis les extras CKAN."""
+    for extra in d.get("extras") or []:
+        if not isinstance(extra, dict):
+            continue
+        key = (extra.get("key") or "").strip().lower()
+        value = (extra.get("value") or "").strip()
+        if key in _FREQUENCY_KEYS and value:
+            return value
+    return None
 
 
 async def get_dataset_info(dataset_id: str) -> str:
@@ -66,6 +103,13 @@ async def get_dataset_info(dataset_id: str) -> str:
     for label, key in (("Crée le", "metadata_created"), ("Modifié le", "metadata_modified")):
         if d.get(key):
             lines.append(f"{label} : {d[key]}")
+
+    frequency = _update_frequency(d)
+    if frequency:
+        lines.append(f"Frequence de mise a jour : {frequency}")
+
+    _, quality = _metadata_quality(d)
+    lines.append(f"Qualite des metadonnees : {quality}")
 
     if d.get("url"):
         lines.append(f"URL externe : {d['url']}")

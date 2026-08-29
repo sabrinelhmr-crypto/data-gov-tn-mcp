@@ -1,5 +1,5 @@
 """
-Outil MCP A1 : search_datasets (section 4.1 du CDC).
+Outil MCP A1 : search_datasets (Famille A - Recherche et Decouverte).
 Version connectee a la vraie API : https://catalog.data.gov.tn
 """
 
