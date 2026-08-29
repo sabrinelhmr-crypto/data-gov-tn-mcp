@@ -46,7 +46,7 @@ Dans un autre terminal :
 curl http://localhost:8000/health
 ```
 
-Réponse attendue : `{"status": "healthy", "tools_count": 1, ...}`
+Réponse attendue : `{"status": "healthy", "tools_count": 3, ...}`
 
 Le serveur MCP est accessible sur `http://localhost:8000/mcp`.
 
@@ -68,8 +68,8 @@ Le serveur expose **9 outils read-only** répartis en **3 familles fonctionnelle
 
 | # | Outil | Description | État |
 |---|-------|-------------|------|
-| A1 | `search_datasets` | Recherche de jeux de données par mots-clés | 🔜 |
-| A2 | `search_dataservices` | Recherche de dataservices (APIs externes) | 🔜 |
+| A1 | `search_datasets` | Recherche de jeux de données par mots-clés | ✅ |
+| A2 | `search_dataservices` | Recherche de dataservices (APIs externes) | ✅ |
 
 ### Famille B — Inspection et Métadonnées
 
@@ -95,11 +95,16 @@ Le serveur expose **9 outils read-only** répartis en **3 familles fonctionnelle
 ├── main.py                  # Point d'entrée (serveur + health check)
 ├── config.py                # Configuration (via .env)
 ├── tools/                   # Les outils MCP (un fichier par outil)
+│   ├── search_datasets.py            # A1 — Recherche de datasets
+│   ├── search_dataservices.py        # A2 — Recherche de dataservices
 │   ├── get_dataset_info.py           # B1 — Métadonnées d'un dataset
 │   ├── list_dataset_resources.py     # B2 — Liste des ressources
 │   ├── get_resource_info.py          # B3 — Métadonnées d'une ressource
 │   ├── get_dataservice_info.py       # B4 — Métadonnées d'un dataservice
-│   └── get_dataservice_openapi_spec.py  # B5 — Spéc OpenAPI
+│   ├── get_dataservice_openapi_spec.py  # B5 — Spéc OpenAPI
+│   ├── query_resource_data.py        # C1 — Requête tabulaire
+│   ├── download_and_parse_resource.py   # C2 — Téléchargement et parsing
+│   └── get_metrics.py                # C3 — Indicateurs d'usage
 ├── helpers/                 # Code partagé (client API, nettoyage requêtes...)
 ├── models/                  # Modèles de données (Phase 2)
 ├── tests/                   # Tests unitaires
