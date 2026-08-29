@@ -9,7 +9,6 @@ import pytest
 from helpers.api_client import DatagovAPIError
 
 search_mod = importlib.import_module("tools.search_datasets")
-dataset_mod = importlib.import_module("tools.get_dataset_info")
 dataservice_mod = importlib.import_module("tools.search_dataservices")
 
 Handler = Callable[[dict[str, Any] | None], Awaitable[dict[str, Any]]]
@@ -32,6 +31,5 @@ def datagov(monkeypatch: pytest.MonkeyPatch) -> FakeDatagovClient:
     """Substitue le client API dans les modules outils par une instance factice."""
     fake = FakeDatagovClient()
     monkeypatch.setattr(search_mod, "datagov_client", fake)
-    monkeypatch.setattr(dataset_mod, "datagov_client", fake)
     monkeypatch.setattr(dataservice_mod, "datagov_client", fake)
     return fake
