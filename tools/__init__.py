@@ -3,6 +3,7 @@
 from fastmcp import FastMCP
 
 from tools.get_dataset_info import get_dataset_info
+from tools.list_dataset_resources import list_dataset_resources
 from tools.search_dataservices import search_dataservices
 from tools.search_datasets import search_datasets
 
@@ -12,3 +13,4 @@ def register_tools(mcp: FastMCP) -> None:
     mcp.add_tool(search_datasets)
     mcp.add_tool(get_dataset_info)
     mcp.add_tool(search_dataservices)
+    mcp.add_tool(list_dataset_resources)
