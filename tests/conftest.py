@@ -33,3 +33,12 @@ def datagov(monkeypatch: pytest.MonkeyPatch) -> FakeDatagovClient:
     monkeypatch.setattr(search_mod, "datagov_client", fake)
     monkeypatch.setattr(dataservice_mod, "datagov_client", fake)
     return fake
+=======
+# Fixtures pytest
+
+import pytest
+
+
+def pytest_configure(config: "pytest.Config") -> None:
+    config.addinivalue_line("markers", "asyncio: mark test as async")
+    config.option.asyncio_mode = "auto"
