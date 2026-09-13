@@ -23,6 +23,11 @@ class Settings(BaseSettings):
 
     # --- API data.gov.tn ---
     DATAGOV_API_ENV: Literal["prod", "demo"] = "prod"
+    DATAGOV_API_BASE_URL: str = "https://catalog.data.gov.tn/api/3"
+    DATAGOV_API_KEY: str | None = None
+    # Verification TLS. Desactiver (false) uniquement si le store CA local est
+    # incomplet (typique des environnements de developpement / proxy d'entreprise).
+    DATAGOV_API_VERIFY_SSL: bool = True
     DATAGOV_API_BASE_URL: str = "https://www.data.gov.tn/api/3"
     DATAGOV_API_KEY: str | None = None
 
@@ -36,7 +41,10 @@ class Settings(BaseSettings):
     MATOMO_SITE_ID: str | None = None
 
     # --- Sécurité ---
+    ALLOWED_HOSTS: str = "data.gov.tn,www.data.gov.tn,catalog.data.gov.tn,mcp.data.gov.tn"
+=======
     ALLOWED_HOSTS: str = "data.gov.tn,www.data.gov.tn,mcp.data.gov.tn"
+
     ALLOWED_ORIGINS: str = "*"
     CORS_ENABLED: bool = True
 

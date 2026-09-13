@@ -1,6 +1,7 @@
 """Tests unitaires du health check (/health et /health/ready)."""
 
 import importlib
+=======
 from datetime import datetime
 
 import httpx
@@ -15,6 +16,8 @@ main_mod = importlib.import_module("main")
 async def asgi_client():
     """Client ASGI contre l'app Starlette FastMCP."""
     transport = httpx.ASGITransport(app=main_mod.app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
+=======
     async with httpx.AsyncClient(
         transport=transport, base_url="http://testserver"
     ) as client:
@@ -22,6 +25,7 @@ async def asgi_client():
 
 
 async def test_health_liveness(monkeypatch, asgi_client):
+    # Pas d'appel externe attendu sur /health : on casse le client API.
     async def boom(*args, **kwargs):
         raise DatagovAPIError("ne doit pas etre appele")
 
@@ -32,12 +36,14 @@ async def test_health_liveness(monkeypatch, asgi_client):
     body = response.json()
     assert body["status"] == "healthy"
     assert body["service"] == "data.gov.tn-mcp"
-    assert body["version"]
+    assert body["version"
+    assert body["tools_count"] == 2
     assert body["tools_count"] == 4
     assert body["uptime_since"]
     assert body["uptime_seconds"] >= 0
 
 
+=======
 async def test_health_liveness_no_api_call(monkeypatch, asgi_client):
     call_count = 0
 
@@ -114,6 +120,7 @@ async def test_health_ready_api_down(monkeypatch, asgi_client):
     assert body["status"] == "degraded"
     assert body["api"]["reachable"] is False
     assert "API down" in body["api"]["error"]
+=======
 
 
 async def test_health_ready_only_catches_datagov_error(monkeypatch, asgi_client):
