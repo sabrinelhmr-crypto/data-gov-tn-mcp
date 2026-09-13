@@ -68,6 +68,29 @@ class DatagovClient:
 
         return data
 
+    async def download(self, url: str) -> bytes:
+        """
+        Telecharge une ressource (fichier) et renvoie son contenu brut.
+
+        Args:
+            url: URL absolue du fichier (ex: URL de telechargement d'une ressource).
+
+        Returns:
+            Les octets bruts du fichier.
+
+        Raises:
+            DatagovAPIError: Erreur reseau ou statut HTTP != 200.
+        """
+        try:
+            response = await self._client.get(url)
+        except httpx.HTTPError as exc:
+            raise DatagovAPIError(f"Erreur reseau lors du telechargement ({url}) : {exc}") from exc
+
+        if response.status_code != 200:
+            raise DatagovAPIError(f"HTTP {response.status_code} lors du telechargement de {url}")
+
+        return response.content
+
     async def aclose(self) -> None:
         """Ferme proprement la connexion HTTP."""
         await self._client.aclose()

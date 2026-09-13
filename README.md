@@ -61,7 +61,7 @@ La commande exécute tous les tests et affiche la couverture de code
 
 ## Les outils disponibles
 
-Le serveur expose **9 outils read-only** répartis en **3 familles fonctionnelles**
+Le serveur expose **8 outils read-only** répartis en **3 familles fonctionnelles**
 (conformément au cahier des charges) :
 
 ### Famille A — Recherche et Découverte
@@ -85,9 +85,9 @@ Le serveur expose **9 outils read-only** répartis en **3 familles fonctionnelle
 
 | # | Outil | Description | État |
 |---|-------|-------------|------|
-| C1 | `query_resource_data` | Interroge une ressource tabulaire (Tabular API) | 🔜 |
-| C2 | `download_and_parse_resource` | Télécharge et analyse une ressource (CSV, Excel, JSON) | 🔜 |
-| C3 | `get_metrics` | Indicateurs d'usage du portail (prod uniquement) | 🔜 |
+| C1 | `query_resource_data` | Interroge une ressource tabulaire (Tabular API) | ✅ |
+| C2 | `download_and_parse_resource` | Télécharge et analyse une ressource (CSV, Excel, JSON) | ✅ |
+| C3 | `get_metrics` | Indicateurs d'usage du portail (prod uniquement) | ✅ |
 
 ## Structure du projet
 
