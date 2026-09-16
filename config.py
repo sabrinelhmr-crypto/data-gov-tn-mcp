@@ -28,8 +28,6 @@ class Settings(BaseSettings):
     # Verification TLS. Desactiver (false) uniquement si le store CA local est
     # incomplet (typique des environnements de developpement / proxy d'entreprise).
     DATAGOV_API_VERIFY_SSL: bool = True
-    DATAGOV_API_BASE_URL: str = "https://www.data.gov.tn/api/3"
-    DATAGOV_API_KEY: str | None = None
 
     # --- Logging ---
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
@@ -42,9 +40,6 @@ class Settings(BaseSettings):
 
     # --- Sécurité ---
     ALLOWED_HOSTS: str = "data.gov.tn,www.data.gov.tn,catalog.data.gov.tn,mcp.data.gov.tn"
-=======
-    ALLOWED_HOSTS: str = "data.gov.tn,www.data.gov.tn,mcp.data.gov.tn"
-
     ALLOWED_ORIGINS: str = "*"
     CORS_ENABLED: bool = True
 
