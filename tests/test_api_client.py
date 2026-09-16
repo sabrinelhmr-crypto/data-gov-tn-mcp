@@ -104,29 +104,6 @@ def test_get_success_false_sans_message(client, fake_async_client):
         _call(client.get("/action/package_search"))
 
 
-def test_download_renvoie_octets(client, fake_async_client):
-    fake_async_client.get.return_value = httpx.Response(200, content=b"Date,Miskar\n1,2\n")
-
-    raw = _call(client.download("https://example.org/file.csv"))
-
-    assert raw == b"Date,Miskar\n1,2\n"
-    fake_async_client.get.assert_called_once_with("https://example.org/file.csv")
-
-
-def test_download_erreur_reseau(client, fake_async_client):
-    fake_async_client.get.side_effect = httpx.ConnectError("connexion refusee")
-
-    with pytest.raises(DatagovAPIError, match="Erreur reseau lors du telechargement"):
-        _call(client.download("https://example.org/file.csv"))
-
-
-def test_download_http_non_200(client, fake_async_client):
-    fake_async_client.get.return_value = httpx.Response(500)
-
-    with pytest.raises(DatagovAPIError, match="HTTP 500"):
-        _call(client.download("https://example.org/file.csv"))
-
-
 def test_aclose_ferme_le_client(client, fake_async_client):
     _call(client.aclose())
     fake_async_client.aclose.assert_called_once()

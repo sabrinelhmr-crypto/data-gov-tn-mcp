@@ -45,7 +45,6 @@ class Settings(BaseSettings):
 
     # --- Performance ---
     MAX_PAGE_SIZE: int = 100
-    MAX_DOWNLOAD_SIZE_MB: int = 100
     REQUEST_TIMEOUT: int = 30
 
     @property

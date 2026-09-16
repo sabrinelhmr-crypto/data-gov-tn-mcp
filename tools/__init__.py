@@ -2,12 +2,9 @@
 
 from fastmcp import FastMCP
 
-from tools.download_and_parse_resource import download_and_parse_resource
 from tools.get_dataset_info import get_dataset_info
-from tools.get_metrics import get_metrics
 from tools.get_resource_info import get_resource_info
 from tools.list_dataset_resources import list_dataset_resources
-from tools.query_resource_data import query_resource_data
 from tools.search_dataservices import search_dataservices
 from tools.search_datasets import search_datasets
 
@@ -19,6 +16,3 @@ def register_tools(mcp: FastMCP) -> None:
     mcp.add_tool(search_dataservices)
     mcp.add_tool(list_dataset_resources)
     mcp.add_tool(get_resource_info)
-    mcp.add_tool(query_resource_data)
-    mcp.add_tool(download_and_parse_resource)
-    mcp.add_tool(get_metrics)
