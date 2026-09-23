@@ -73,6 +73,10 @@ class DatagovClient:
         await self._client.aclose()
 
 
+# Alias utilise par les outils Famille B (branche famille-b-inspection).
+DataGovError = DatagovAPIError
+
+
 # Instance unique, utilisable partout : from helpers.api_client import datagov_client
 datagov_client = DatagovClient(
     base_url=settings.DATAGOV_API_BASE_URL,

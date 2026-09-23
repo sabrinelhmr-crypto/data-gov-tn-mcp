@@ -75,11 +75,11 @@ Le serveur expose **9 outils read-only** répartis en **3 familles fonctionnelle
 
 | # | Outil | Description | État |
 |---|-------|-------------|------|
-| B1 | `get_dataset_info` | Métadonnées détaillées d'un jeu de données | 🔜 |
-| B2 | `list_dataset_resources` | Liste des ressources (fichiers) d'un dataset | 🔜 |
-| B3 | `get_resource_info` | Métadonnées détaillées d'une ressource | 🔜 |
-| B4 | `get_dataservice_info` | Métadonnées d'un dataservice | 🔜 |
-| B5 | `get_dataservice_openapi_spec` | Spécification OpenAPI d'un dataservice | 🔜 |
+| B1 | `get_dataset_info` | Métadonnées détaillées d'un jeu de données | ✅ |
+| B2 | `list_dataset_resources` | Liste des ressources (fichiers) d'un dataset | ✅ |
+| B3 | `get_resource_info` | Métadonnées détaillées d'une ressource | ✅ |
+| B4 | `get_dataservice_info` | Métadonnées d'un dataservice | ✅ |
+| B5 | `get_dataservice_openapi_spec` | Spécification OpenAPI d'un dataservice | ✅ |
 
 ### Famille C — Analyse de Données
 
