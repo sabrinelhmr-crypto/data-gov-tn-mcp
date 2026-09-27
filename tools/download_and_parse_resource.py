@@ -256,3 +256,7 @@ async def download_and_parse_resource(resource_id: str, limit: int = 1000) -> st
     lines.extend(_sample_lines(df))
 
     return "\n".join(lines)
+=======
+Telecharge et analyse une ressource (CSV, Excel, JSON).
+"""
+

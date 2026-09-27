@@ -16,6 +16,8 @@ resource_mod = importlib.import_module("tools.get_resource_info")
 query_mod = importlib.import_module("tools.query_resource_data")
 download_mod = importlib.import_module("tools.download_and_parse_resource")
 metrics_mod = importlib.import_module("tools.get_metrics")
+dataservice_mod = importlib.import_module("tools.search_dataservices")
+
 
 Handler = Callable[[dict[str, Any] | None], Awaitable[dict[str, Any]]]
 
@@ -33,6 +35,9 @@ class FakeDatagovClient:
     async def get(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         if self.path_handler is not None:
             return await self.path_handler(path, params)
+=======
+
+    async def get(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         if self.handler is None:
             raise DatagovAPIError("Aucun handler configure pour ce test.")
         return await self.handler(params)
@@ -41,7 +46,6 @@ class FakeDatagovClient:
         if self.download_handler is None:
             raise DatagovAPIError("Aucun download_handler configure pour ce test.")
         return await self.download_handler(url)
-
 
 @pytest.fixture
 def datagov(monkeypatch: pytest.MonkeyPatch) -> FakeDatagovClient:
@@ -55,4 +59,5 @@ def datagov(monkeypatch: pytest.MonkeyPatch) -> FakeDatagovClient:
     monkeypatch.setattr(query_mod, "datagov_client", fake)
     monkeypatch.setattr(download_mod, "datagov_client", fake)
     monkeypatch.setattr(metrics_mod, "datagov_client", fake)
+    monkeypatch.setattr(dataservice_mod, "datagov_client", fake)
     return fake
