@@ -60,8 +60,10 @@ La commande exécute tous les tests et affiche la couverture de code
 (minimum requis : **90 %**).
 
 ## Les outils disponibles
-
+Le serveur expose **8 outils read-only** répartis en **3 familles fonctionnelles**
+=======
 Le serveur expose **9 outils read-only** répartis en **3 familles fonctionnelles**
+
 (conformément au cahier des charges) :
 
 ### Famille A — Recherche et Découverte
@@ -77,14 +79,21 @@ Le serveur expose **9 outils read-only** répartis en **3 familles fonctionnelle
 |---|-------|-------------|------|
 | B1 | `get_dataset_info` | Métadonnées détaillées d'un jeu de données | ✅ |
 | B2 | `list_dataset_resources` | Liste des ressources (fichiers) d'un dataset | ✅ |
+| B3 | `get_resource_info` | Métadonnées détaillées d'une ressource | 🔜 |
+| B4 | `get_dataservice_info` | Métadonnées d'un dataservice | 🔜 |
+| B5 | `get_dataservice_openapi_spec` | Spécification OpenAPI d'un dataservice | 🔜 |
 | B3 | `get_resource_info` | Métadonnées détaillées d'une ressource | ✅ |
 | B4 | `get_dataservice_info` | Métadonnées d'un dataservice | ✅ |
 | B5 | `get_dataservice_openapi_spec` | Spécification OpenAPI d'un dataservice | ✅ |
+
 
 ### Famille C — Analyse de Données
 
 | # | Outil | Description | État |
 |---|-------|-------------|------|
+| C1 | `query_resource_data` | Interroge une ressource tabulaire (Tabular API) | ✅ |
+| C2 | `download_and_parse_resource` | Télécharge et analyse une ressource (CSV, Excel, JSON) | ✅ |
+| C3 | `get_metrics` | Indicateurs d'usage du portail (prod uniquement) | ✅ |
 | C1 | `query_resource_data` | Interroge une ressource tabulaire (Tabular API) | 🔜 |
 | C2 | `download_and_parse_resource` | Télécharge et analyse une ressource (CSV, Excel, JSON) | 🔜 |
 | C3 | `get_metrics` | Indicateurs d'usage du portail (prod uniquement) | 🔜 |

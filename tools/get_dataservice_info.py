@@ -1,3 +1,9 @@
+
+"""
+Outil MCP B4 : get_dataservice_info (Famille B - Inspection et Metadonnees).
+Recupere les metadonnees d'un dataservice (API externe).
+"""
+=======
 from helpers.api_client import DataGovError, datagov_client
 from helpers.i18n import t
 
