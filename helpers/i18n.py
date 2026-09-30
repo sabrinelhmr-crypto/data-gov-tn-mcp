@@ -72,7 +72,7 @@ _LABELS: dict[str, dict[str, str]] = {
             "Impossible de récupérer la spécification de '{title}' ({url}) : {error}"
         ),
         "spec_too_large": (
-            "Spécification OpenAPI de '{title}' trop volumineuse " "(>2 Mo), téléchargement refusé."
+            "Spécification OpenAPI de '{title}' trop volumineuse (>2 Mo), téléchargement refusé."
         ),
         "source_resource": "ressource du dataservice",
         "source_extra": "métadonnées du dataservice",

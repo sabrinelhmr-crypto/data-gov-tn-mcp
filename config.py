@@ -48,6 +48,20 @@ class Settings(BaseSettings):
     MAX_DOWNLOAD_SIZE_MB: int = 100
     REQUEST_TIMEOUT: int = 30
 
+    # --- Telchargement de ressources (C2) ---
+    # Hotes autorises pour le telechargement des fichiers de ressources.
+    # Vide = tout hote public est accepte, ce qui est le cas reel aujourd'hui :
+    # les fichiers du portail sont heberges sur catalog.agridata.tn et
+    # d'autres domaines gouvernementaux, pas sur data.gov.tn.
+    # Renseigner une liste (ex: "*.data.gov.tn,catalog.agridata.tn") resserre
+    # la surface d'atteinte. Le garde-fou bloque de toute facon les adresses
+    # privees, loopback, link-local et multicast.
+    DOWNLOAD_ALLOWED_HOSTS: str = ""
+
+    @property
+    def download_allowed_hosts_list(self) -> list[str]:
+        return [h.strip() for h in self.DOWNLOAD_ALLOWED_HOSTS.split(",") if h.strip()]
+
     @property
     def allowed_hosts_list(self) -> list[str]:
         return [h.strip() for h in self.ALLOWED_HOSTS.split(",") if h.strip()]

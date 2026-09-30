@@ -1,6 +1,7 @@
 """Enregistrement des outils MCP."""
 
 from fastmcp import FastMCP
+
 from tools.download_and_parse_resource import download_and_parse_resource
 from tools.get_dataset_info import get_dataset_info
 from tools.get_metrics import get_metrics
@@ -21,5 +22,3 @@ def register_tools(mcp: FastMCP) -> None:
     mcp.add_tool(query_resource_data)
     mcp.add_tool(download_and_parse_resource)
     mcp.add_tool(get_metrics)
-=======
-    mcp.add_tool(search_dataservices)

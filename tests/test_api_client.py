@@ -1,14 +1,37 @@
 """Tests unitaires du client HTTP CKAN (helpers/api_client.py)."""
 
 import asyncio
+import ipaddress
 from unittest import mock
 
 import httpx
 import pytest
 
-from helpers.api_client import DatagovAPIError, DatagovClient
+import helpers.url_guard as url_guard
+from helpers.api_client import (
+    DatagovAPIError,
+    DatagovClient,
+    DownloadTooLargeError,
+    UnsafeDownloadURLError,
+)
 
 BASE_URL = "https://catalog.data.gov.tn/api/3"
+
+_PUBLIC_IP = "93.184.216.34"
+
+
+@pytest.fixture(autouse=True)
+def resolution_dns_simulee(monkeypatch):
+    """Elimine toute resolution DNS reelle des tests de telechargement."""
+    resolution = {f"example{i}.org": _PUBLIC_IP for i in range(6)}
+    resolution["example.org"] = _PUBLIC_IP
+    resolution["cdn.example.net"] = _PUBLIC_IP
+    resolution["data.gov.tn"] = _PUBLIC_IP
+
+    def fake_resolver(host: str):
+        return [ipaddress.ip_address(resolution.get(host, host))]
+
+    monkeypatch.setattr(url_guard, "_default_resolver", fake_resolver)
 
 
 @pytest.fixture
@@ -103,27 +126,150 @@ def test_get_success_false_sans_message(client, fake_async_client):
     with pytest.raises(DatagovAPIError, match="Erreur CKAN inconnue"):
         _call(client.get("/action/package_search"))
 
-def test_download_renvoie_octets(client, fake_async_client):
-    fake_async_client.get.return_value = httpx.Response(200, content=b"Date,Miskar\n1,2\n")
 
-    raw = _call(client.download("https://example.org/file.csv"))
+def _mock_client(handler, **kwargs):
+    """Client reel branche sur un transport httpx simule (streaming inclus)."""
+    return DatagovClient(base_url=BASE_URL, transport=httpx.MockTransport(handler), **kwargs)
+
+
+class _EndlessStream(httpx.AsyncByteStream):
+    """Flux sans fin, pour verifier que la coupe intervient en cours de lecture."""
+
+    def __init__(self, chunk_size: int = 512) -> None:
+        self.chunk_size = chunk_size
+        self.chunks = 0
+
+    async def __aiter__(self):
+        while True:
+            self.chunks += 1
+            yield b"x" * self.chunk_size
+
+
+def test_download_renvoie_octets():
+    def handler(request):
+        return httpx.Response(200, content=b"Date,Miskar\n1,2\n")
+
+    raw = _call(_mock_client(handler).download("https://example.org/file.csv", max_bytes=1024))
 
     assert raw == b"Date,Miskar\n1,2\n"
-    fake_async_client.get.assert_called_once_with("https://example.org/file.csv")
 
 
-def test_download_erreur_reseau(client, fake_async_client):
-    fake_async_client.get.side_effect = httpx.ConnectError("connexion refusee")
+def test_download_erreur_reseau():
+    def handler(request):
+        raise httpx.ConnectError("connexion refusee")
 
     with pytest.raises(DatagovAPIError, match="Erreur reseau lors du telechargement"):
-        _call(client.download("https://example.org/file.csv"))
+        _call(_mock_client(handler).download("https://example.org/file.csv", max_bytes=1024))
 
 
-def test_download_http_non_200(client, fake_async_client):
-    fake_async_client.get.return_value = httpx.Response(500)
+def test_download_http_non_200():
+    def handler(request):
+        return httpx.Response(500)
 
     with pytest.raises(DatagovAPIError, match="HTTP 500"):
-        _call(client.download("https://example.org/file.csv"))
+        _call(_mock_client(handler).download("https://example.org/file.csv", max_bytes=1024))
+
+
+def test_download_refuse_url_non_publique():
+    def handler(request):  # pragma: no cover - jamais appele
+        raise AssertionError("le garde-fou doit bloquer avant la requete")
+
+    with pytest.raises(UnsafeDownloadURLError, match="adresse publique"):
+        _call(
+            _mock_client(handler).download(
+                "http://169.254.169.254/latest/meta-data/", max_bytes=1024
+            )
+        )
+
+
+def test_download_refuse_schema_non_autorise():
+    def handler(request):  # pragma: no cover - jamais appele
+        raise AssertionError("le garde-fou doit bloquer avant la requete")
+
+    with pytest.raises(UnsafeDownloadURLError, match="Schema d'URL interdit"):
+        _call(_mock_client(handler).download("file:///etc/passwd", max_bytes=1024))
+
+
+def test_download_refuse_hote_hors_liste_blanche():
+    def handler(request):  # pragma: no cover - jamais appele
+        raise AssertionError("le garde-fou doit bloquer avant la requete")
+
+    client = _mock_client(handler)
+    with pytest.raises(UnsafeDownloadURLError, match="Hote non autorise"):
+        _call(
+            client.download(
+                "https://example.org/file.csv",
+                max_bytes=1024,
+                allowed_hosts=["*.data.gov.tn"],
+            )
+        )
+
+
+def test_download_coupe_des_content_length_trop_gros():
+    def handler(request):
+        return httpx.Response(200, headers={"content-length": "99999"}, content=b"x")
+
+    with pytest.raises(DownloadTooLargeError, match="declares"):
+        _call(_mock_client(handler).download("https://example.org/f.csv", max_bytes=1024))
+
+
+def test_download_coupe_le_flux_meme_sans_content_length():
+    """La limite doit s'appliquer pendant la lecture, pas apres coup."""
+    stream = _EndlessStream()
+
+    def handler(request):
+        return httpx.Response(200, stream=stream)
+
+    with pytest.raises(DownloadTooLargeError, match="octets recus"):
+        _call(_mock_client(handler).download("https://example.org/f.csv", max_bytes=1024))
+
+    assert stream.chunks <= 4
+
+
+def test_download_suit_une_redirection_puis_revalide():
+    seen = []
+
+    def handler(request):
+        seen.append(str(request.url))
+        if request.url.host == "example.org":
+            return httpx.Response(302, headers={"location": "http://169.254.169.254/latest/"})
+        return httpx.Response(200, content=b"ok")  # pragma: no cover
+
+    with pytest.raises(UnsafeDownloadURLError, match="adresse publique"):
+        _call(_mock_client(handler).download("https://example.org/f.csv", max_bytes=1024))
+
+    assert seen == ["https://example.org/f.csv"]
+
+
+def test_download_accepte_une_redirection_publique():
+    def handler(request):
+        if request.url.host == "example.org":
+            return httpx.Response(302, headers={"location": "https://cdn.example.net/f.csv"})
+        return httpx.Response(200, content=b"ok")
+
+    raw = _call(_mock_client(handler).download("https://example.org/f.csv", max_bytes=1024))
+    assert raw == b"ok"
+
+
+def test_download_refuse_boucle_de_redirections():
+    def handler(request):
+        return httpx.Response(302, headers={"location": "https://example.org/f.csv"})
+
+    with pytest.raises(DatagovAPIError, match="Trop de redirections"):
+        _call(_mock_client(handler).download("https://example.org/f.csv", max_bytes=1024))
+
+
+def test_download_masque_les_identifiants_dans_les_erreurs():
+    def handler(request):
+        return httpx.Response(500)
+
+    with pytest.raises(DatagovAPIError) as exc:
+        _call(
+            _mock_client(handler).download("https://user:secret@example.org/f.csv", max_bytes=1024)
+        )
+
+    assert "secret" not in str(exc.value)
+
 
 def test_aclose_ferme_le_client(client, fake_async_client):
     _call(client.aclose())

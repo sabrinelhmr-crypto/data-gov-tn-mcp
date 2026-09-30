@@ -55,11 +55,12 @@ async def test_liste_affichage_dataset(datagov):
     datagov.handler = handler
 
     out = await list_dataset_resources("abc-123")
-    assert "Dataset : Titre test" in out
-    assert "ID : abc-123" in out
-    assert "Slug : titre-test" in out
-    assert "Organisation : Org Test" in out
-    assert "Nombre de ressources : 1" in out
+    assert "1 ressource(s) pour 'Titre test' :" in out
+    assert "Page 1/1 (20 par page)" in out
+    # Le header ne reprend plus slug ni organisation : ils sont exposes par
+    # get_dataset_info (B1).
+    assert "Slug : titre-test" not in out
+    assert "Organisation : Org Test" not in out
 
 
 async def test_liste_affichage_ressource(datagov):
@@ -69,15 +70,16 @@ async def test_liste_affichage_ressource(datagov):
     datagov.handler = handler
 
     out = await list_dataset_resources("abc-123")
-    assert "1. Donnees 2024 [CSV]" in out
-    assert "ID : res-1" in out
-    assert "URL : https://example.org/file.csv" in out
-    assert "Type : file" in out
-    assert "Description : Fichier principal" in out
-    assert "Datastore : actif" in out
-    assert "Téléchargements : 42" in out
-    assert "Taille : 2.0 Ko" in out
-    assert "Modifiée le : 2024-02-01T00:00:00" in out
+    assert "1. Donnees 2024" in out
+    assert "   ID : res-1" in out
+    assert "   URL : https://example.org/file.csv" in out
+    assert "   Type : file" in out
+    assert "   Tabular API : Oui" in out
+    assert "   Taille : 2.0 Ko" in out
+    assert "   Dernière modification : 2024-02-01T00:00:00" in out
+    # Le nombre de telechargements et la description ne sont pas exposes.
+    assert "Téléchargements :" not in out
+    assert "Description :" not in out
 
 
 async def test_liste_plusieurs_ressources(datagov):
@@ -103,13 +105,14 @@ async def test_liste_plusieurs_ressources(datagov):
     datagov.handler = handler
 
     out = await list_dataset_resources("abc-123")
-    assert "Nombre de ressources : 2" in out
-    assert "1. Donnees [CSV]" in out
-    assert "2. Documentation [PDF]" in out
-    assert "Datastore : inactif" in out
-    assert "Téléchargements : 42" in out
-    assert "Créée le : 2023-01-01T00:00:00" in out
-    assert "Taille : 2.0 Ko" in out
+    assert "2 ressource(s) pour 'Titre test' :" in out
+    assert "1. Donnees" in out
+    assert "   Format : CSV" in out
+    assert "2. Documentation" in out
+    assert "   Format : PDF" in out
+    assert "   Tabular API : Non" in out
+    assert "   Taille : Non renseignée" in out
+    assert "   Dernière modification : Non renseignée" in out
 
 
 async def test_liste_sans_ressource(datagov):
@@ -119,8 +122,7 @@ async def test_liste_sans_ressource(datagov):
     datagov.handler = handler
 
     out = await list_dataset_resources("abc-123")
-    assert "Nombre de ressources : 0" in out
-    assert "Ce dataset ne contient aucune ressource." in out
+    assert "Aucune ressource attachée à ce dataset." in out
 
 
 async def test_liste_dataset_introuvable(datagov):
@@ -132,8 +134,7 @@ async def test_liste_dataset_introuvable(datagov):
     datagov.handler = handler
 
     out = await list_dataset_resources("abc-introuvable")
-    assert "Dataset introuvable" in out
-    assert "abc-introuvable" in out
+    assert "Not found: abc" in out
 
 
 async def test_liste_requete_vide(datagov):
@@ -160,15 +161,16 @@ async def test_ressource_minimale(datagov):
     datagov.handler = handler
 
     out = await list_dataset_resources("abc-123")
-    assert "1. Sans nom [?]" in out
-    assert "Type : Fichier" in out
-    assert "Datastore : inactif" in out
+    assert "1. Ressource 1" in out
+    assert "   Format : INCONNU" in out
+    assert "   Type : file" in out
+    assert "   Tabular API : Non" in out
 
 
 def test_human_size():
-    assert _human_size(500) == "500 o"
-    assert _human_size(2048) == "2.0 Ko"
-    assert _human_size(5 * 1024 * 1024) == "5.0 Mo"
-    assert _human_size(3 * 1024 * 1024 * 1024) == "3.0 Go"
-    assert _human_size(None) is None
-    assert _human_size("xyz") is None
+    assert _human_size(500, "fr") == "500 o"
+    assert _human_size(2048, "fr") == "2.0 Ko"
+    assert _human_size(5 * 1024 * 1024, "fr") == "5.0 Mo"
+    assert _human_size(3 * 1024 * 1024 * 1024, "fr") == "3.0 Go"
+    assert _human_size(None, "fr") == "Non renseignée"
+    assert _human_size("xyz", "fr") == "Non renseignée"

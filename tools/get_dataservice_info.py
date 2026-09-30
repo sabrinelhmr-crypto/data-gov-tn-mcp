@@ -1,10 +1,9 @@
-
 """
 Outil MCP B4 : get_dataservice_info (Famille B - Inspection et Metadonnees).
 Recupere les metadonnees d'un dataservice (API externe).
 """
-=======
-from helpers.api_client import DataGovError, datagov_client
+
+from helpers.api_client import DatagovAPIError, datagov_client
 from helpers.i18n import t
 
 _DOC_FORMATS = ("documentation", "docs", "html", "htm")
@@ -50,7 +49,7 @@ async def get_dataservice_info(dataservice_id: str, lang: str = "fr") -> str:
         return t("Veuillez fournir un identifiant de dataservice.", lang)
     try:
         return await _get_dataservice_info(dataservice_id, lang)
-    except DataGovError as exc:
+    except DatagovAPIError as exc:
         return str(exc)
 
 

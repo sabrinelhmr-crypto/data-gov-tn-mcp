@@ -25,7 +25,15 @@ except PackageNotFoundError:  # source directe (python main.py)
 
 START_TIME = datetime.now(UTC)
 
-mcp = FastMCP(APP_NAME)
+mcp = FastMCP(
+    APP_NAME,
+    # Une erreur de validation doit etre signalee, pas corrigee au silence :
+    # sans cela, page_size="10" est converti en 10 par le serveur.
+    strict_input_validation=True,
+    # En production, ne pas renvoyer aux clients le detail des exceptions
+    # internes (chemins d'API, messages amont, stack traces).
+    mask_error_details=settings.MCP_ENV == "prod",
+)
 register_tools(mcp)
 
 
@@ -79,8 +87,47 @@ async def ready_route(request):
     return JSONResponse(info, status_code=200 if info["status"] == "healthy" else 503)
 
 
-# App Starlette exposée (utilisée par les tests et le déploiement ASGI).
-app = mcp.http_app()
+def _origin_allowlist() -> list[str]:
+    """
+    Origines autorisees pour le transport HTTP.
+
+    En production, une liste '*' est refusee au demarrage : sur un endpoint
+    MCP sans authentification, elle autorise n'importe quelle page web a
+    interroger le serveur au nom de l'utilisateur (CDC 6.1).
+    """
+    origins = settings.allowed_origins_list
+    if settings.MCP_ENV == "prod" and "*" in origins:
+        raise RuntimeError(
+            "ALLOWED_ORIGINS contient '*' alors que MCP_ENV=prod. Restreignez "
+            "la variable aux origines reelles (ex: https://mcp.data.gov.tn) "
+            "avant de demarrer en production."
+        )
+    if not settings.CORS_ENABLED:
+        return []
+    return origins
+
+
+def create_app():
+    """
+    Construit l'application ASGI.
+
+    host_origin_protection=True est indispensable : sans lui, FastMCP installe
+    les listes allowed_hosts/allowed_origins mais n'installe PAS le middleware
+    de verification, qui reste le defaut a False. La protection active alors
+    rejecte un Host inconnu (421) et une origine etrangere (403), ce qui bloque
+    le DNS rebinding et les appels depuis une page web tierce (CDC 6.1).
+    stateless_http supprime tout etat de session cote serveur.
+    """
+    return mcp.http_app(
+        host_origin_protection=True,
+        allowed_hosts=settings.allowed_hosts_list,
+        allowed_origins=_origin_allowlist(),
+        stateless_http=True,
+    )
+
+
+# App Starlette exposee (utilisee par les tests et le deploiement ASGI).
+app = create_app()
 
 
 if __name__ == "__main__":

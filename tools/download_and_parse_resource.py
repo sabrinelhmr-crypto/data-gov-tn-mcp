@@ -11,7 +11,12 @@ import urllib.parse
 import pandas as pd
 
 from config import settings
-from helpers.api_client import DatagovAPIError, datagov_client
+from helpers.api_client import (
+    DatagovAPIError,
+    DownloadTooLargeError,
+    UnsafeDownloadURLError,
+    datagov_client,
+)
 
 # Formats supportes (CDC C2) + ODS (techno simple ajoutee).
 _SUPPORTED_FORMATS = {"csv", "tsv", "xlsx", "xls", "ods", "json", "geojson"}
@@ -213,15 +218,16 @@ async def download_and_parse_resource(resource_id: str, limit: int = 1000) -> st
         )
 
     try:
-        raw = await datagov_client.download(url)
-    except DatagovAPIError as exc:
-        return f"Echec du telechargement de '{name}' : {exc}"
-
-    if len(raw) > max_bytes:
+        raw = await datagov_client.download(url, max_bytes=max_bytes)
+    except DownloadTooLargeError:
         return (
             f"Ressource '{name}' : fichier trop volumineux au telechargement "
-            f"({_human_size(len(raw))} > {settings.MAX_DOWNLOAD_SIZE_MB} Mo)."
+            f"(plus de {settings.MAX_DOWNLOAD_SIZE_MB} Mo)."
         )
+    except UnsafeDownloadURLError as exc:
+        return f"Ressource '{name}' : telechargement refuse ({exc})."
+    except DatagovAPIError as exc:
+        return f"Echec du telechargement de '{name}' : {exc}"
 
     try:
         df = _read_tabular(raw, file_format, limit)
@@ -256,7 +262,3 @@ async def download_and_parse_resource(resource_id: str, limit: int = 1000) -> st
     lines.extend(_sample_lines(df))
 
     return "\n".join(lines)
-=======
-Telecharge et analyse une ressource (CSV, Excel, JSON).
-"""
-

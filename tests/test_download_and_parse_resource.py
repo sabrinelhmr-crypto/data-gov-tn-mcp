@@ -5,7 +5,8 @@ import json
 
 from openpyxl import Workbook
 
-from helpers.api_client import DatagovAPIError
+from config import settings
+from helpers.api_client import DatagovAPIError, UnsafeDownloadURLError
 from tools.download_and_parse_resource import (
     _detect_format,
     _human_size,
@@ -90,6 +91,43 @@ async def test_taille_excessive_apres_telechargement(datagov):
 
     out = await download_and_parse_resource("res-1")
     assert "trop volumineux au telechargement" in out
+
+
+async def test_limite_de_taille_est_deleguee_au_client(datagov):
+    """La borne doit etre passee au client, qui coupe le flux en cours de lecture."""
+    capture = {}
+
+    async def handler(params):
+        return _payload(_resource(format="CSV", size=None))
+
+    async def download(url, *, max_bytes=None, allowed_hosts=None):
+        capture["max_bytes"] = max_bytes
+        return b"Date,Miskar\n2010-01,127.62\n"
+
+    datagov.handler = handler
+    datagov.download = download
+
+    await download_and_parse_resource("res-1")
+
+    assert capture["max_bytes"] == settings.MAX_DOWNLOAD_SIZE_MB * 1024 * 1024
+
+
+async def test_url_refusee_rend_un_message_dedie(datagov):
+    """Un refus du garde-fou SSRF ne doit pas fuiter comme une erreur brute."""
+
+    async def handler(params):
+        return _payload(_resource(format="CSV"))
+
+    async def download(url, *, max_bytes=None, allowed_hosts=None):
+        raise UnsafeDownloadURLError("Hote non autorise pour le telechargement : 'x'.")
+
+    datagov.handler = handler
+    datagov.download = download
+
+    out = await download_and_parse_resource("res-1")
+
+    assert "telechargement refuse" in out
+    assert "Hote non autorise" in out
 
 
 async def test_csv_analyse(datagov):

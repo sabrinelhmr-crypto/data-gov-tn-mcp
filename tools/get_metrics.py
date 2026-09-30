@@ -117,7 +117,3 @@ async def get_metrics(dataset_id: str | None = None, period: str = _DEFAULT_PERI
         lines.append(await _portal_metrics())
 
     return "\n".join(lines)
-=======
-Indicateurs d'usage d'un dataset ou du portail (prod uniquement).
-"""
-
