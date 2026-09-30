@@ -288,3 +288,143 @@ async def test_aucune_ligne(datagov):
     datagov.handler = handler
     out = await query_resource_data(RID)
     assert "Aucune ligne trouvee." in out
+
+
+# --- Validation des entrees de filtre et de tri ---
+
+FIELDS_BOOL = [
+    {"id": "_id", "type": "int"},
+    {"id": "Date", "type": "text"},
+    {"id": "Miskar", "type": "numeric"},
+    {"id": "Actif", "type": "bool"},
+]
+
+
+async def test_filtre_pas_un_objet(datagov):
+    out = await query_resource_data(RID, filters=["Date = 2010"])
+    assert "objet attendu (column/operator/value)" in out
+
+
+async def test_tri_pas_un_objet(datagov):
+    out = await query_resource_data(RID, sort=["Date desc"])
+    assert "objet attendu (column/direction)" in out
+
+
+async def test_tri_sans_colonne(datagov):
+    out = await query_resource_data(RID, sort=[{"direction": "desc"}])
+    assert "colonne manquante" in out
+
+
+async def test_erreur_datastore_hors_sql(datagov):
+    """Une erreur CKAN en mode JSON doit etre rendue lisiblement."""
+
+    async def handler(params):
+        if params.get("limit") == 0:
+            return _payload()
+        raise DatagovAPIError("Internal Server Error")
+
+    datagov.handler = handler
+    out = await query_resource_data(RID)
+    assert "Erreur lors de l'interrogation du datastore" in out
+    assert "Internal Server Error" in out
+
+
+# --- Echappement SQL des litteraux ---
+
+
+def _handler_sql(captured, fields=None):
+    """Handler factice qui capture la requete SQL construite."""
+
+    async def handler(params):
+        if params.get("limit") == 0:
+            return _payload(fields=fields or FIELDS_BOOL)
+        captured.update(params)
+        return {"success": True, "result": {"records": []}}
+
+    return handler
+
+
+async def test_null_est_ecrit_sans_guillemets(datagov):
+    captured = {}
+    datagov.handler = _handler_sql(captured)
+    await query_resource_data(RID, filters=[{"column": "Date", "operator": "ne", "value": None}])
+    assert '"Date" != NULL' in captured["sql"]
+
+
+async def test_booleen_est_ecrit_en_mot_sql(datagov):
+    captured = {}
+    datagov.handler = _handler_sql(captured)
+    await query_resource_data(RID, filters=[{"column": "Actif", "operator": "ne", "value": True}])
+    assert '"Actif" != true' in captured["sql"]
+
+
+async def test_operateur_in_devient_un_in_sql(datagov):
+    """'in' n'est pas un operateur SQL : il n'atteint la clause WHERE que
+    combine a un operateur qui, lui, force le mode SQL."""
+    captured = {}
+    datagov.handler = _handler_sql(captured)
+    await query_resource_data(
+        RID,
+        filters=[
+            {"column": "Miskar", "operator": "gt", "value": 0},
+            {"column": "Date", "operator": "in", "value": ["2010-01", "2010-02"]},
+        ],
+    )
+    assert '"Miskar" > 0' in captured["sql"]
+    assert "\"Date\" IN ('2010-01', '2010-02')" in captured["sql"]
+
+
+async def test_operateur_in_seul_passe_par_json(datagov):
+    captured = {}
+    datagov.handler = _handler_sql(captured)
+    await query_resource_data(RID, filters=[{"column": "Date", "operator": "in", "value": ["a"]}])
+    assert "sql" not in captured
+    assert json.loads(captured["filters"]) == {"Date": ["a"]}
+
+
+async def test_page_size_negatif_replombe_sur_20(datagov):
+    captured = {}
+
+    async def handler(params):
+        if params.get("limit") == 0:
+            return _payload()
+        captured.update(params)
+        return _payload(records=RECORDS)
+
+    datagov.handler = handler
+    out = await query_resource_data(RID, page_size=0)
+
+    assert "Page 1/1 (20 par page)" in out
+    assert captured["limit"] == 20
+
+
+# --- Rendu des valeurs ---
+
+
+async def test_valeur_nulle_et_texte_tronque(datagov):
+    long_texte = "y" * 500
+
+    async def handler(params):
+        if params.get("limit") == 0:
+            return _payload()
+        return _payload(
+            records=[
+                {"_id": 1, "Date": None, "Miskar": long_texte},
+                {"_id": 2, "Date": "2010-02", "Miskar": 100.5},
+            ]
+        )
+
+    datagov.handler = handler
+    out = await query_resource_data(RID, columns=["_id", "Date", "Miskar"])
+
+    ligne = next(x for x in out.splitlines() if x.startswith("1."))
+    assert "Date=" in ligne
+    assert "y" * 120 not in ligne
+    assert "..." in ligne
+
+
+def test_truncate_edeite_les_espaces():
+    from tools.query_resource_data import _truncate
+
+    assert _truncate("  court  ", 20) == "court"
+    assert _truncate("abcdefghij", 5) == "ab..."

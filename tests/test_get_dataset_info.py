@@ -78,18 +78,15 @@ async def test_info_affichage_metadonnees(datagov):
     datagov.handler = handler
 
     out = await get_dataset_info("abc-123")
-    assert "Titre : Titre test" in out
+    assert out.splitlines()[0] == "Titre test"
     assert "ID : abc-123" in out
-    assert "Slug : titre-test" in out
     assert "Organisation : Org Test" in out
+    assert "Description : Description du dataset." in out
     assert "Licence : Licence ouverte" in out
-    assert "Themes : Theme A" in out
     assert "Tags : eau, potable" in out
-    assert "Auteur : Auteur X" in out
-    assert "Mainteneur : Mainteneur Y" in out
-    assert "Crée le : 2023-01-01T00:00:00" in out
-    assert "Modifié le : 2024-02-01T00:00:00" in out
-    assert "URL externe : https://example.org/page" in out
+    assert "Créé le : 2023-01-01T00:00:00" in out
+    assert "Dernière modification : 2024-02-01T00:00:00" in out
+    assert "Nombre de ressources : 2" in out
 
 
 async def test_info_ressources(datagov):
@@ -99,13 +96,12 @@ async def test_info_ressources(datagov):
     datagov.handler = handler
 
     out = await get_dataset_info("abc-123")
-    assert "Ressources (2) :" in out
-    assert "1. Donnees 2024 [CSV]" in out
-    assert "res-1" in out
-    assert "datastore actif" in out
-    assert "42 téléchargements" in out
-    assert "https://example.org/file.csv" in out
-    assert "2. Documentation [PDF]" in out
+    # Les ressources sont resumees par leur nombre ; le detail est expose par
+    # list_dataset_resources (B2) et get_resource_info (B3).
+    assert "Nombre de ressources : 2" in out
+    assert "Qualité des métadonnées : 88%" in out
+    assert "Champs manquants : fréquence de mise à jour" in out
+    assert "Ressources (" not in out
 
 
 async def test_info_sans_metadonnees_optionnelles(datagov):
@@ -125,10 +121,14 @@ async def test_info_sans_metadonnees_optionnelles(datagov):
     datagov.handler = handler
 
     out = await get_dataset_info("abc-123")
-    assert "Organisation : Inconnue" in out
-    assert "Description : Aucune" in out
-    assert "Ressources (0) :" in out
-    assert "Licence :" not in out
+    assert out.splitlines()[0] == "Minimal"
+    assert "Organisation : Organisation inconnue" in out
+    assert "Licence : Non renseignée" in out
+    assert "Nombre de ressources : 0" in out
+    # Une description absente ne produit aucune ligne, et la licence est
+    # toujours presente (avec sa valeur de repli).
+    assert "Description :" not in out
+    assert "Qualité des métadonnées : 12%" in out
 
 
 async def test_info_dataset_introuvable(datagov):
@@ -140,8 +140,7 @@ async def test_info_dataset_introuvable(datagov):
     datagov.handler = handler
 
     out = await get_dataset_info("abc-introuvable")
-    assert "Dataset introuvable" in out
-    assert "abc-introuvable" in out
+    assert "Not found: abc" in out
 
 
 async def test_info_metadonnees_cdc(datagov):
@@ -154,8 +153,9 @@ async def test_info_metadonnees_cdc(datagov):
 
     datagov.handler = handler
     out = await get_dataset_info("abc-123")
-    assert "Frequence de mise a jour : mensuelle" in out
-    assert "Qualite des metadonnees : 10/10 champs remplis (100%)" in out
+    assert "Fréquence de mise à jour : mensuelle" in out
+    assert "Qualité des métadonnées : 100%" in out
+    assert "Champs manquants" not in out
 
 
 async def test_info_requete_vide(datagov):

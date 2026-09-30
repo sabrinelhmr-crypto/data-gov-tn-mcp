@@ -313,6 +313,3 @@ async def query_resource_data(
     lines.extend(rows or ["Aucune ligne trouvee."])
 
     return "\n".join(lines)
-=======
-Interroge une ressource tabulaire via la Tabular API.
-"""

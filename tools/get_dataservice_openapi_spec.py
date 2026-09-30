@@ -1,15 +1,14 @@
-
 """
 Outil MCP B5 : get_dataservice_openapi_spec (Famille B - Inspection et Metadonnees).
 Recupere la specification OpenAPI d'un dataservice.
 """
-=======
+
 import json
 
 import httpx
 
 from config import settings
-from helpers.api_client import DataGovError, datagov_client
+from helpers.api_client import DatagovAPIError, datagov_client
 from helpers.i18n import t
 
 _MAX_SPEC_BYTES = 2 * 1024 * 1024
@@ -110,7 +109,7 @@ async def get_dataservice_openapi_spec(dataservice_id: str, lang: str = "fr") ->
         return t("Veuillez fournir un identifiant de dataservice.", lang)
     try:
         return await _get_dataservice_openapi_spec(dataservice_id, lang)
-    except DataGovError as exc:
+    except DatagovAPIError as exc:
         return str(exc)
 
 
