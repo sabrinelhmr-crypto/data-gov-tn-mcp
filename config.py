@@ -47,6 +47,35 @@ class Settings(BaseSettings):
     MAX_PAGE_SIZE: int = 100
     MAX_DOWNLOAD_SIZE_MB: int = 100
     REQUEST_TIMEOUT: int = 30
+    # Nombre total de tentatives sur l'API data.gov.tn (1 = pas de retry).
+    # Le retry ne s'applique qu'aux erreurs transitoires : timeout, erreur
+    # reseau, et statuts 429/502/503/504. Un 4xx definitive n'est pas rejoue.
+    API_MAX_ATTEMPTS: int = 3
+    # Delai avant le premier retry, en secondes ; double a chaque essai.
+    API_RETRY_BACKOFF: float = 0.25
+    # Plafond du delai de retry, en secondes (le backoff ne depasse pas).
+    API_RETRY_BACKOFF_MAX: float = 2.0
+
+    # --- Rate limiting (CDC 6.1 : 100 requetes/minute/IP) ---
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_PER_MINUTE: int = 100
+    # Requetes tolerees au-dela du quota dans la fenetre, avant retour 429.
+    RATE_LIMIT_BURST: int = 20
+    # Les probes /health sont exclues du quota : elles viennent de
+    # l'orchestrateur, pas d'un utilisateur, et ne doivent pas consommer
+    # le budget des clients reels.
+    RATE_LIMIT_EXEMPT_PATHS: str = "/health,/health/ready"
+    # L'IP cliente est celle du socket sauf si le reverse proxy est declare
+    # de confiance. Sans cette declaration, lire X-Forwarded-For permettrait a
+    # n'importe qui de forger une IP et de contourner le quota.
+    RATE_LIMIT_TRUST_PROXY: bool = False
+    # Adresses (ou motifs, ex: "10.0.0.0/8" non gere : utilisez "*" ou un
+    # suffixe ".example.org") des proxys dont le X-Forwarded-For fait foi.
+    # Indispensable : sans liste, TRUST_PROXY reste inoperant et le quota
+    # s'applique au proxy lui-meme, donc a tous les clients confondus.
+    RATE_LIMIT_TRUSTED_PROXIES: str = "127.0.0.1,::1"
+    # Nombre maximum d'IP memorisees en meme temps (garde-fou memoire).
+    RATE_LIMIT_MAX_KEYS: int = 10_000
 
     # --- Telchargement de ressources (C2) ---
     # Hotes autorises pour le telechargement des fichiers de ressources.
@@ -69,6 +98,14 @@ class Settings(BaseSettings):
     @property
     def allowed_origins_list(self) -> list[str]:
         return [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
+
+    @property
+    def rate_limit_exempt_paths_list(self) -> list[str]:
+        return [p.strip() for p in self.RATE_LIMIT_EXEMPT_PATHS.split(",") if p.strip()]
+
+    @property
+    def rate_limit_trusted_proxies_list(self) -> list[str]:
+        return [p.strip() for p in self.RATE_LIMIT_TRUSTED_PROXIES.split(",") if p.strip()]
 
 
 # Instance unique importable partout : from config import settings

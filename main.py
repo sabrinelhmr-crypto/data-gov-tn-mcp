@@ -7,10 +7,13 @@ from importlib.metadata import PackageNotFoundError, version
 from typing import Any
 
 from fastmcp import FastMCP
+from starlette.middleware import Middleware
 from starlette.responses import JSONResponse
 
 from config import settings
 from helpers.api_client import DatagovAPIError, datagov_client
+from helpers.rate_limit import SlidingWindowRateLimiter
+from helpers.rate_limit_middleware import RateLimitMiddleware
 from logging_config import setup_logging
 from tools import register_tools
 
@@ -71,11 +74,13 @@ async def ready_route(request):
     try:
         data = await datagov_client.get("/action/status_show")
         latency_ms = round((datetime.now(UTC) - started).total_seconds() * 1000, 1)
+        # CKAN expose la version du moteur sous la cle `ckan_version` de
+        # `result` (et non `version`) : lire `version` renvoyait toujours null.
         api_status.update(
             {
                 "reachable": True,
                 "latency_ms": latency_ms,
-                "ckan_version": (data.get("result") or {}).get("version"),
+                "ckan_version": (data.get("result") or {}).get("ckan_version"),
             }
         )
         info["status"] = "healthy"
@@ -107,6 +112,30 @@ def _origin_allowlist() -> list[str]:
     return origins
 
 
+def _build_rate_limiter() -> SlidingWindowRateLimiter:
+    """Compteur de debit partage par toutes les instances de l'application."""
+    return SlidingWindowRateLimiter(
+        limit=settings.RATE_LIMIT_PER_MINUTE,
+        window=60.0,
+        burst=settings.RATE_LIMIT_BURST,
+        max_keys=settings.RATE_LIMIT_MAX_KEYS,
+    )
+
+
+rate_limiter = _build_rate_limiter()
+
+
+def _rate_limit_middleware() -> Middleware:
+    """Middleware de débit, paramétré par la configuration courante."""
+    return Middleware(
+        RateLimitMiddleware,
+        limiter=rate_limiter,
+        exempt_paths=settings.rate_limit_exempt_paths_list,
+        trust_proxy=settings.RATE_LIMIT_TRUST_PROXY,
+        trusted_hosts=settings.rate_limit_trusted_proxies_list,
+    )
+
+
 def create_app():
     """
     Construit l'application ASGI.
@@ -117,12 +146,18 @@ def create_app():
     rejecte un Host inconnu (421) et une origine etrangere (403), ce qui bloque
     le DNS rebinding et les appels depuis une page web tierce (CDC 6.1).
     stateless_http supprime tout etat de session cote serveur.
+
+    Le middleware de limitation de debit (CDC 6.1) est ajoute en premier, donc
+    le plus proche du client : une requete refusee ne doit pas atteindre
+    FastMCP ni l'API data.gov.tn.
     """
+    middleware = [_rate_limit_middleware()] if settings.RATE_LIMIT_ENABLED else None
     return mcp.http_app(
         host_origin_protection=True,
         allowed_hosts=settings.allowed_hosts_list,
         allowed_origins=_origin_allowlist(),
         stateless_http=True,
+        middleware=middleware,
     )
 
 

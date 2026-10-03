@@ -31,7 +31,7 @@ async def test_health_liveness(monkeypatch, asgi_client):
     assert body["status"] == "healthy"
     assert body["service"] == "data.gov.tn-mcp"
     assert body["version"]
-    assert body["tools_count"] == 8
+    assert body["tools_count"] == 10
     assert body["uptime_since"]
     assert body["uptime_seconds"] >= 0
 
@@ -40,7 +40,9 @@ async def test_health_ready_api_ok(monkeypatch, asgi_client):
     class FakeClient:
         async def get(self, path, params=None):
             assert path == "/action/status_show"
-            return {"success": True, "result": {"version": "2.11.0"}}
+            # Le CKAN reel expose la version du moteur sous `result.ckan_version`
+            # (et non `result.version`) : voir la reponse de production capturee.
+            return {"success": True, "result": {"ckan_version": "2.11.0"}}
 
     monkeypatch.setattr(main_mod, "datagov_client", FakeClient())
 

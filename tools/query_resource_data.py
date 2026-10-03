@@ -9,6 +9,7 @@ import math
 
 from config import settings
 from helpers.api_client import DatagovAPIError, datagov_client
+from helpers.ckan import field_types, result_of
 
 # Operateurs de filtre autorises (CDC C1).
 _OPERATORS = {"eq", "ne", "gt", "lt", "gte", "lte", "in", "contains"}
@@ -202,8 +203,14 @@ async def query_resource_data(
         )
 
     result = schema["result"]
-    column_types = {f["id"]: f["type"] for f in result["fields"]}
+    column_types = field_types(result)
     available = {col for col in column_types if col != "_full_text"}
+
+    if not available:
+        return (
+            f"Ressource '{rid}' : le datastore ne declare aucune colonne "
+            f"(schema vide ou ressource en cours d'indexation)."
+        )
 
     # 2) Validation des colonnes (selection, filtres, tris).
     requested = list(columns or [])
@@ -266,7 +273,7 @@ async def query_resource_data(
         except DatagovAPIError as exc:
             return f"Erreur lors de l'interrogation SQL du datastore : {exc}"
 
-        records = data["result"]["records"]
+        records = result_of(data).get("records") or []
         lines.append(f"Lignes retournees : {len(records)}")
         lines.append(f"Page {page} (total exact indisponible en mode SQL)")
     else:

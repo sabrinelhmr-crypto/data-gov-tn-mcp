@@ -105,6 +105,19 @@ def _format_spec(text: str) -> str:
 
 
 async def get_dataservice_openapi_spec(dataservice_id: str, lang: str = "fr") -> str:
+    """
+    Recupere la specification OpenAPI d'un dataservice du catalogue.
+
+    L'URL de la specification est decouverte dans les ressources, les extras
+    puis, a defaut, `<url de base>/openapi.json`.
+
+    Args:
+        dataservice_id: Identifiant du dataservice.
+        lang: Langue des libelles : `fr` (defaut), `en`, `ar`.
+
+    Returns:
+        La specification OpenAPI 3.0+ complete, en JSON indenté.
+    """
     if not dataservice_id or not dataservice_id.strip():
         return t("Veuillez fournir un identifiant de dataservice.", lang)
     try:

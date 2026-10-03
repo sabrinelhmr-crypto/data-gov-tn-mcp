@@ -1,1 +1,1 @@
-# Modèles Pydantic Resource
+# Modeles Pydantic Resource

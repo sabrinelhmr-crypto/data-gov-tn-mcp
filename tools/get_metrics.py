@@ -101,7 +101,9 @@ async def get_metrics(dataset_id: str | None = None, period: str = _DEFAULT_PERI
             "(reglez DATAGOV_API_ENV=prod)."
         )
 
-    period = (period or _DEFAULT_PERIOD).strip().lower()
+    # Normaliser avant de valider : une periode absente ou blanche signifie
+    # "periode par defaut", pas une valeur invalide.
+    period = (period or "").strip().lower() or _DEFAULT_PERIOD
     if period not in _PERIODS:
         periods = ", ".join(sorted(_PERIODS))
         return f"Periode '{period}' non valide (valeurs acceptees : {periods})."

@@ -45,6 +45,17 @@ def _is_doc_resource(resource: dict) -> bool:
 
 
 async def get_dataservice_info(dataservice_id: str, lang: str = "fr") -> str:
+    """
+    Recupere les metadonnees d'un dataservice (API externe) du catalogue.
+
+    Args:
+        dataservice_id: Identifiant du dataservice.
+        lang: Langue des libelles : `fr` (defaut), `en`, `ar`.
+
+    Returns:
+        Titre, description, URL de base, endpoint principal, format de reponse
+        et adresse de la documentation.
+    """
     if not dataservice_id or not dataservice_id.strip():
         return t("Veuillez fournir un identifiant de dataservice.", lang)
     try:

@@ -18,13 +18,15 @@ Trilingual (FR/AR/EN) tool documentation, per Tunisian Decree 2021-3 (art. 16).
 ## Vue d'ensemble
 
 Le CDC §4.1 annonce « 9 outils » mais en énumère **10** (A1, A2, B1–B5, C1–C3).
-**8 sont enregistrés** ; B4 et B5 sont écrits et testés mais volontairement
-**non enregistrés** (voir leur section). L'endpoint `GET /health` renvoie
-`tools_count: 8`, ce qui fait autorité.
+**Les 10 sont enregistrés.** B4 et B5 sont exposés pour conformité au CDC : le
+portail n'ayant pas d'entité `dataservice` distincte, ils acceptent l'identifiant
+d'un dataset et en extrayent la vue « service » (ressources API). L'endpoint
+`GET /health` renvoie `tools_count: 10`, ce qui fait autorité.
 
-The CDC says "9 tools" but lists **10**. **8 are registered**; B4 and B5 are
-written and tested but deliberately **not registered** (see their sections).
-`GET /health` reports `tools_count: 8`, which is authoritative.
+The CDC says "9 tools" but lists **10**. **All 10 are registered.** B4 and B5 are
+exposed for CDC compliance: since the portal has no distinct `dataservice`
+entity, they take a dataset id and extract its "service" view (API resources).
+`GET /health` reports `tools_count: 10`, which is authoritative.
 
 | # | Outil | Famille | Statut | Status |
 |---|-------|---------|--------|--------|
@@ -33,8 +35,8 @@ written and tested but deliberately **not registered** (see their sections).
 | B1 | [`get_dataset_info`](#b1-get_dataset_info-implémenté) | Inspection | ✅ Implémenté | Live |
 | B2 | [`list_dataset_resources`](#b2-list_dataset_resources-implémenté) | Inspection | ✅ Implémenté | Live |
 | B3 | [`get_resource_info`](#b3-get_resource_info-implémenté) | Inspection | ✅ Implémenté | Live |
-| B4 | [`get_dataservice_info`](#b4-get_dataservice_info-implémenté) | Inspection | ⚠️ Codé, non enregistré | Blocked |
-| B5 | [`get_dataservice_openapi_spec`](#b5-get_dataservice_openapi_spec-implémenté-non-enregistré) | Inspection | ⚠️ Codé, non enregistré | Blocked |
+| B4 | [`get_dataservice_info`](#b4-get_dataservice_info-implémenté) | Inspection | ✅ Enregistré | Live |
+| B5 | [`get_dataservice_openapi_spec`](#b5-get_dataservice_openapi_spec-implémenté) | Inspection | ✅ Enregistré | Live |
 | C1 | [`query_resource_data`](#c1-query_resource_data-implémenté) | Analyse | ✅ Implémenté | Live |
 | C2 | [`download_and_parse_resource`](#c2-download_and_parse_resource-implémenté) | Analyse | ✅ Implémenté | Live |
 | C3 | [`get_metrics`](#c3-get_metrics-implémenté) | Analyse | ✅ Implémenté | Live |
@@ -626,7 +628,7 @@ Page 1/2 (2 par page)
    Format : HTML
    Taille : Non renseignée
    Type : file
-   URL : 
+   URL :
    Dernière modification : Non renseignée
    Tabular API : Non
 
@@ -697,7 +699,7 @@ Page 1/2 (2 par page)
    التنسيق : HTML
    الحجم : غير محددة
    النوع : file
-   الرابط : 
+   الرابط :
    آخر تعديل : غير محددة
    Tabular API : لا
 
@@ -759,7 +761,7 @@ Page 1/2 (2 per page)
    Format : HTML
    Size : Not provided
    Type : file
-   URL : 
+   URL :
    Last modified : Not provided
    Tabular API : No
 
@@ -825,7 +827,7 @@ Situation des systèmes d'alimentation en eau potable
 ID : ccf8f946-8ad0-4e1c-9c48-6d07be899600
 Format : HTML
 MIME type : Non renseigné
-URL : 
+URL :
 Taille : Non renseignée
 Type de ressource : file
 Dataset parent : bb95f2ac-fc65-4cb4-843a-e9a6f99cd938
@@ -914,7 +916,7 @@ Situation des systèmes d'alimentation en eau potable
 ID : ccf8f946-8ad0-4e1c-9c48-6d07be899600
 Format : HTML
 MIME type : Not provided
-URL : 
+URL :
 Size : Not provided
 Resource type : file
 Parent dataset : bb95f2ac-fc65-4cb4-843a-e9a6f99cd938
@@ -927,7 +929,7 @@ Checksum : Not provided
 
 ---
 
-## B4. `get_dataservice_info` (implémenté)
+## B4. `get_dataservice_info` (implémenté, enregistré)
 
 ### 🇫🇷 Français
 
@@ -1073,7 +1075,7 @@ Documentation : https://api.example.tn/docs
 
 ---
 
-## B5. `get_dataservice_openapi_spec` (implémenté, non enregistré)
+## B5. `get_dataservice_openapi_spec` (implémenté, enregistré)
 
 ### 🇫🇷 Français
 
@@ -2030,8 +2032,8 @@ Pour les ressources disposant d'un datastore actif, remplacez l'étape 3 par :
 
 | Sujet | État | Action |
 |-------|------|--------|
-| Nombre d'outils annoncé | CDC dit 9, en liste 10, code en expose 8 | Aligner le CDC |
-| B4 / B5 | ⚠️ Codés et testés, non enregistrés | Décider du périmètre (voir section B) |
+| Nombre d'outils annoncé | CDC dit 9 mais en liste 10 ; le code en expose **10** | Aligner le CDC sur « 10 » |
+| B4 / B5 | ✅ Codés, testés et enregistrés | Confirmer que `dataservice_id` = dataset |
 | Trilinguisme AR/FR/EN | ⚠️ `lang` disponible sur B1–B5 (libellés seuls) ; A et C restent en français | Étendre à A et C pour l'art. 16 |
 | Format de sortie | Texte brut, pas JSON structuré | Envisager un wrapper |
 | B2 pagination | ✅ `page`/`page_size` exposés, `page_size` plafonné par `MAX_PAGE_SIZE` | — |

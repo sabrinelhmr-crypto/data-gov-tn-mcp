@@ -6,7 +6,8 @@ Version connectee a la vraie API : https://catalog.data.gov.tn
 import math
 
 from config import settings
-from helpers.api_client import datagov_client
+from helpers.api_client import DatagovAPIError, datagov_client
+from helpers.ckan import search_page
 from helpers.query_cleaner import clean_query
 
 
@@ -59,30 +60,36 @@ async def search_datasets(
             params["fq"] = fq
         return await datagov_client.get("/action/package_search", params=params)
 
-    # Phase 1 : requete nettoyee
-    data = await _search(cleaned)
-    total = data["result"]["count"]
-    results = data["result"]["results"]
-    used_query = cleaned
+    async def _resolve() -> tuple[int, list[dict], str]:
+        """Trois phases, de la plus ciblee a la plus large."""
+        # Phase 1 : requete nettoyee
+        data = await _search(cleaned)
+        total, results = search_page(data)
+        used_query = cleaned
 
-    # Phase 2 : fallback sur la requete originale si differente
-    if total == 0 and cleaned != query:
-        data = await _search(query)
-        total = data["result"]["count"]
-        results = data["result"]["results"]
-        used_query = query
+        # Phase 2 : fallback sur la requete originale si differente
+        if total == 0 and cleaned != query:
+            data = await _search(query)
+            total, results = search_page(data)
+            used_query = query
 
-    # Phase 3 : reduction progressive (enlever des mots par la droite)
-    if total == 0:
-        words = cleaned.split()
-        for i in range(len(words) - 1, 0, -1):
-            reduced = " ".join(words[:i])
-            data = await _search(reduced)
-            total = data["result"]["count"]
-            results = data["result"]["results"]
-            used_query = reduced
-            if total > 0:
-                break
+        # Phase 3 : reduction progressive (enlever des mots par la droite)
+        if total == 0:
+            words = cleaned.split()
+            for i in range(len(words) - 1, 0, -1):
+                reduced = " ".join(words[:i])
+                data = await _search(reduced)
+                total, results = search_page(data)
+                used_query = reduced
+                if total > 0:
+                    break
+
+        return total, results, used_query
+
+    try:
+        total, results, used_query = await _resolve()
+    except DatagovAPIError as exc:
+        return f"Recherche impossible sur le portail data.gov.tn pour '{query}' : {exc}"
 
     if total == 0:
         return f"Aucun resultat trouve pour '{query}'."

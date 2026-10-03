@@ -1,3 +1,8 @@
+"""
+Outil MCP B1 : get_dataset_info (Famille B - Inspection et Metadonnees).
+Recupere les metadonnees detaillees d'un jeu de donnees.
+"""
+
 from helpers.api_client import DatagovAPIError, datagov_client
 from helpers.i18n import t
 
@@ -54,6 +59,18 @@ def _api_error(data: dict, lang: str) -> str:
 
 
 async def get_dataset_info(dataset_id: str, lang: str = "fr") -> str:
+    """
+    Recupere les metadonnees detaillees d'un jeu de donnees data.gov.tn.
+
+    Args:
+        dataset_id: Identifiant unique du dataset (URI perenne).
+        lang: Langue des libelles : `fr` (defaut), `en`, `ar`.
+
+    Returns:
+        Titre, organisation, description, tags, licence, frequence de mise a
+        jour, dates de creation et de modification, nombre de ressources et
+        score de qualite des metadonnees.
+    """
     if not dataset_id or not dataset_id.strip():
         return t("Veuillez fournir un identifiant de dataset.", lang)
     try:

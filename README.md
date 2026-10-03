@@ -30,17 +30,18 @@ naturel.
 
 > ⚠️ **Lisez cette section avant de promettre des outils à vos utilisateurs.**
 > Le cahier des charges (CDC §4.1) décrit **10 outils** — son texte en annonce
-> « 9 », mais la liste en contient 10. À ce jour, **8 sont enregistrés** ;
-> B4 et B5 sont écrits et testés mais volontairement **non enregistrés**, car le
-> portail ne publie pas d'entité `dataservice`. Ce tableau fait autorité, de
-> même que `tools_count` renvoyé par `/health`.
+> « 9 », mais sa liste en contient 10. **Les 10 sont enregistrés** et
+> apparaissent dans `tools/list`. B4 et B5 sont exposés pour conformité au CDC :
+> data.gov.tn n'ayant pas d'entité `dataservice` distincte, ces deux outils
+> acceptent l'identifiant d'un dataset et en extraient la vue « service »
+> (ressources API). Ce tableau fait autorité, de même que `tools_count`
+> renvoyé par `/health`.
 >
 > ⚠️ **اقرأ هذا القسم قبل أن تَعِد المستخدمين بأي أدوات.** يصف كرّاس الشروط
-> (القسم 4.1) **10 أدوات** (نصّه يذكر « 9 »)، غير أنّ **8 منها مطبّقة
-> ومسجّلة**؛ أما الأداتان B4 و B5 فمكتوبتان ومختبَرتان لكنهما غير مسجّلتين.
+> (القسم 4.1) **10 أدوات** (نصّه يذكر « 9 »)، و**الأدوات العشر كلها مسجّلة**.
 >
 > ⚠️ **Read this section before promising tools to your users.** The
-> specification lists **10 tools** (its own text says 9); **8 are registered**.
+> specification lists **10 tools** (its own text says 9); **all 10 are registered**.
 
 | # | Tool | Famille | Statut / الحالة | Status |
 |---|------|---------|-----------------|--------|
@@ -49,8 +50,8 @@ naturel.
 | B1 | `get_dataset_info` | Inspection | ✅ Implémenté (FR/AR/EN) | Live |
 | B2 | `list_dataset_resources` | Inspection | ✅ Implémenté (FR/AR/EN) | Live |
 | B3 | `get_resource_info` | Inspection | ✅ Implémenté (FR/AR/EN) | Live |
-| B4 | `get_dataservice_info` | Inspection | ⚠️ Codé, non enregistré | Blocked |
-| B5 | `get_dataservice_openapi_spec` | Inspection | ⚠️ Codé, non enregistré | Blocked |
+| B4 | `get_dataservice_info` | Inspection | ✅ Enregistré (FR/AR/EN) | Live |
+| B5 | `get_dataservice_openapi_spec` | Inspection | ✅ Enregistré (FR/AR/EN) | Live |
 | C1 | `query_resource_data` | Analyse | ✅ Implémenté | Live |
 | C2 | `download_and_parse_resource` | Analyse | ✅ Implémenté | Live |
 | C3 | `get_metrics` | Analyse | ✅ Implémenté | Live |
@@ -316,14 +317,14 @@ dans le CDC (annexe A) et dans [docs/client_setup.md](docs/client_setup.md).
 ├── models/                  # ⬜ stubs Pydantic (phase 2)
 ├── tests/
 └── tools/
-    ├── __init__.py          # register_tools() — 8 outils enregistrés
+    ├── __init__.py          # register_tools() — 10 outils enregistrés
     ├── search_datasets.py       # A1 ✅
     ├── search_dataservices.py   # A2 ✅
     ├── get_dataset_info.py      # B1 ✅
     ├── list_dataset_resources.py # B2 ✅
     ├── get_resource_info.py     # B3 ✅
-    ├── get_dataservice_info.py  # B4 ⚠️ codé, non enregistré
-    ├── get_dataservice_openapi_spec.py # B5 ⚠️ codé, non enregistré
+    ├── get_dataservice_info.py  # B4 ✅
+    ├── get_dataservice_openapi_spec.py # B5 ✅
     ├── query_resource_data.py   # C1 ✅
     ├── download_and_parse_resource.py # C2 ✅
     └── get_metrics.py           # C3 ✅

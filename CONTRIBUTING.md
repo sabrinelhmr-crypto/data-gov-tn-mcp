@@ -25,7 +25,7 @@ l'état réel évite des PR qui documentent des choses inexistantes.
 |---------|-------|
 | Famille A — `search_datasets`, `search_dataservices` | ✅ Implémenté et testé |
 | Famille B — B1, B2, B3 | ✅ Implémenté et testé |
-| Famille B — B4 `get_dataservice_info`, B5 `get_dataservice_openapi_spec` | ⚠️ Codés et testés, non enregistrés (`register_tools`) |
+| Famille B — B4 `get_dataservice_info`, B5 `get_dataservice_openapi_spec` | ✅ Implémentés, testés et enregistrés |
 | Famille C — C1, C2, C3 | ✅ Implémenté et testé |
 | `helpers/api_client.py` | ✅ `get()` + `download()` + `aclose()` |
 | `helpers/query_cleaner.py` | ✅ |
@@ -220,7 +220,8 @@ littéraux SQL `NULL`/booléens, `IN`, pagination), `helpers/url_guard.py` et
 Le script `test_live_livraison.py` a été supprimé : il vivait à la racine du
 dépôt, hors de `testpaths`, et `--cov=.` comptait ses instructions comme
 non couvertes. Les tests correspondants vivent désormais dans
-`tests/unit/` et `tests/test_transport_security.py`, donc réellement exécutés.
+`tests/` (répertoire plat, structure CDC §5.3) et
+`tests/test_transport_security.py`, donc réellement exécutés.
 
 Ne modifiez pas `pyproject.toml` dans une PR de fonctionnalité : exclure ce
 fichier de la couverture ferait monter le pourcentage **sans tester une seule
@@ -415,11 +416,12 @@ Signaler une vulnérabilité en privé à l'équipe, avant publication d'un tick
 Ces questions sont ouvertes et une décision les débloque. N'en réglez pas
 une vous-même sans discussion :
 
-1. **Bruit d'outils** : le CDC dit 9, en liste 10, le code en expose 8.
-   B4/B5 sont écrits mais non enregistrés : les publier, ou les retirer du
-   périmètre de la phase 1 ?
-2. **Entité `dataservice`** : le portail n'en a pas. Que vaut
-   `dataservice_id` pour B4/B5 — un dataset, une ressource ?
+1. ~~**Bruit d'outils**~~ **Tranché** : le CDC dit 9 mais en liste 10 ; les
+   **10 sont enregistrés** dans `register_tools`, pour conformité CDC §4.1 et
+   au critère d'acceptation §9.3.
+2. **Entité `dataservice`** : le portail n'en a pas. `dataservice_id` vaut
+   aujourd'hui un **dataset** (B4/B5 appellent `package_show`) ; à confirmer
+   avec le commanditaire.
 3. **B5/OpenAPI** : le catalogue ne publie aucune spécification. Extraire à la
    volée, ou retirer l'outil du périmètre ?
 4. **C1 et SQL** : en direct, `eq`, `in` et `contains` répondent, mais `gt` et

@@ -1,3 +1,8 @@
+"""
+Outil MCP B2 : list_dataset_resources (Famille B - Inspection et Metadonnees).
+Liste les ressources (fichiers) attachees a un jeu de donnees.
+"""
+
 import math
 
 from config import settings
@@ -31,6 +36,19 @@ def _api_error(data: dict, dataset_id: str, lang: str) -> str:
 async def list_dataset_resources(
     dataset_id: str, page: int = 1, page_size: int = 20, lang: str = "fr"
 ) -> str:
+    """
+    Liste les ressources (fichiers) attachees a un jeu de donnees.
+
+    Args:
+        dataset_id: Identifiant unique du dataset (URI perenne).
+        page: Numero de page (commence a 1).
+        page_size: Nombre de ressources par page, plafonne par `MAX_PAGE_SIZE`.
+        lang: Langue des libelles : `fr` (defaut), `en`, `ar`.
+
+    Returns:
+        Liste des ressources avec format, taille, type MIME, URL de
+        telechargement, date de mise a jour et disponibilite Tabular API.
+    """
     if not dataset_id or not dataset_id.strip():
         return t("Veuillez fournir un identifiant de dataset.", lang)
     try:

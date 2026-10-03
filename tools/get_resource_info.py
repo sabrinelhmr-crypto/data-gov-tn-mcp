@@ -1,3 +1,8 @@
+"""
+Outil MCP B3 : get_resource_info (Famille B - Inspection et Metadonnees).
+Recupere les metadonnees detaillees d'une ressource attachee a un dataset.
+"""
+
 from helpers.api_client import DatagovAPIError, datagov_client
 from helpers.i18n import t
 
@@ -67,6 +72,17 @@ async def _parent_title(package_id: str) -> str | None:
 
 
 async def get_resource_info(resource_id: str, lang: str = "fr") -> str:
+    """
+    Recupere les metadonnees detaillees d'une ressource data.gov.tn.
+
+    Args:
+        resource_id: Identifiant unique de la ressource.
+        lang: Langue des libelles : `fr` (defaut), `en`, `ar`.
+
+    Returns:
+        MIME type, URL de telechargement, dataset parent, taille, format,
+        disponibilite de la Tabular API et checksum.
+    """
     if not resource_id or not resource_id.strip():
         return t("Veuillez fournir un identifiant de ressource.", lang)
     try:
